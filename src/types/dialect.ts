@@ -15,7 +15,10 @@ export interface EsriStyleOutput {
   version: 8;
   sprite: string;
   glyphs: string;
-  sources: Record<string, { type: "vector"; url: string }>;
+  sources: Record<
+    string,
+    { type: "vector"; url?: string; tiles?: string[]; minzoom?: number; maxzoom?: number }
+  >;
   layers: EsriLayerOutput[];
 }
 

@@ -2,10 +2,10 @@
 // Public API
 
 export { detect } from "./detect/index.ts";
-export { emit } from "./emitters/index.ts";
+export { emit, resolveEsriStyleUrls } from "./emitters/index.ts";
 export { parse } from "./parsers/index.ts";
 // Core functions
-export { transpile } from "./pipeline.ts";
+export { transpile, transpileAsync } from "./pipeline.ts";
 // Types
 export type {
   Dialect,

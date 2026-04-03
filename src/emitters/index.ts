@@ -5,7 +5,8 @@ import { emitEsri } from "./esri.ts";
 import { emitMapbox } from "./mapbox.ts";
 import { emitMaplibre } from "./maplibre.ts";
 
-export { emitEsri, emitMapbox, emitMaplibre };
+export { emitEsri, resolveEsriStyleUrls } from "./esri.ts";
+export { emitMapbox, emitMaplibre };
 
 // ---------------------------------------------------------------------------
 // Emitter dispatcher

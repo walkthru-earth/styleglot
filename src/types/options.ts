@@ -24,6 +24,13 @@ export interface TranspileOptions {
   strict?: boolean;
   /** Custom transform plugins. */
   plugins?: Plugin[];
+  /**
+   * Resolve TileJSON source URLs to inline tile URLs. Default: false.
+   * When false, TileJSON URLs are passed through as-is (Esri JS API can
+   * resolve them natively, which handles overzooming correctly).
+   * When true, TileJSON is fetched and tiles/minzoom/maxzoom are inlined.
+   */
+  resolveSources?: boolean;
   /** Optional fetch adapter for URL resolution requiring network access. */
   fetch?: FetchAdapter;
 }
