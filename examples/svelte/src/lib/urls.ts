@@ -8,6 +8,8 @@ export interface UrlGroup {
   urls: StyleUrl[];
 }
 
+export const DEFAULT_STYLE_URL = "https://demotiles.maplibre.org/style.json";
+
 export const URL_GROUPS: UrlGroup[] = [
   {
     label: "Esri Basemaps",

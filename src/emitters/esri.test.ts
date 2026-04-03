@@ -189,7 +189,7 @@ describe("emitEsri", () => {
     expect(output.sources.openmaptiles.maxzoom).toBe(14);
   });
 
-  it("keeps absolute URLs and emits warnings when no baseUrl and Esri source", () => {
+  it("keeps absolute URLs when no baseUrl and Esri source", () => {
     const ir = makeIR({
       sources: { composite: { type: "vector" } },
       sprite: "https://example.com/sprites/sprite",
@@ -201,8 +201,6 @@ describe("emitEsri", () => {
 
     expect(output.sprite).toBe("https://example.com/sprites/sprite");
     expect(output.glyphs).toBe("https://example.com/fonts/{fontstack}/{range}.pbf");
-    expect(ctx.warnings.length).toBeGreaterThan(0);
-    expect(ctx.warnings.some((w) => w.code === "ESRI_ITEM_URL_NEEDS_BASE")).toBe(true);
   });
 });
 

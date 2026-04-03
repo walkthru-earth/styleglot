@@ -1,10 +1,8 @@
 import type { EsriLayerOutput, EsriStyleOutput } from "../types/dialect.ts";
 import type { TransformContext } from "../types/options.ts";
 import type { IRLayer, IRStyle } from "../types/style.ts";
-import { WARNING_CODES } from "../types/warnings.ts";
 import { resolveEsriGlyphUrl, resolveEsriSourceUrl, resolveEsriSpriteUrl } from "../url/resolve.ts";
 import { appendToken } from "../url/token.ts";
-import { createWarning } from "../utils.ts";
 
 // ---------------------------------------------------------------------------
 // Esri root.json emitter
@@ -12,66 +10,23 @@ import { createWarning } from "../utils.ts";
 
 const ESRI_RELATIVE_SPRITE = "../sprites/sprite";
 const ESRI_RELATIVE_GLYPHS = "../fonts/{fontstack}/{range}.pbf";
-function reRelativizeSprite(sprite: string | undefined, ctx: TransformContext): string {
-  if (ctx.baseUrl) {
-    return ESRI_RELATIVE_SPRITE;
-  }
-
-  if (sprite) {
-    ctx.warnings.push(
-      createWarning(
-        WARNING_CODES.ESRI_ITEM_URL_NEEDS_BASE,
-        "Cannot re-relativize sprite URL without a baseUrl. Keeping absolute URL.",
-        "sprite",
-        "warn",
-        ctx.sourceDialect,
-        ctx.targetDialect,
-      ),
-    );
-    return sprite;
-  }
-
-  return ESRI_RELATIVE_SPRITE;
-}
-
-function reRelativizeGlyphs(glyphs: string | undefined, ctx: TransformContext): string {
-  if (ctx.baseUrl) {
-    return ESRI_RELATIVE_GLYPHS;
-  }
-
-  if (glyphs) {
-    ctx.warnings.push(
-      createWarning(
-        WARNING_CODES.ESRI_ITEM_URL_NEEDS_BASE,
-        "Cannot re-relativize glyphs URL without a baseUrl. Keeping absolute URL.",
-        "glyphs",
-        "warn",
-        ctx.sourceDialect,
-        ctx.targetDialect,
-      ),
-    );
-    return glyphs;
-  }
-
-  return ESRI_RELATIVE_GLYPHS;
-}
 
 /**
- * Check whether IR sources originate from a non-Esri provider (resolved tiles
- * or a TileJSON URL). When true, sprite/glyphs should stay absolute because
- * there is no Esri VTS directory structure to be relative to.
+ * Check whether all vector sources point to an Esri VTS endpoint.
+ * When false, sprite/glyphs should stay absolute because there is no
+ * Esri directory structure to be relative to.
  */
-function hasNonEsriSources(ir: IRStyle): boolean {
+function isEsriVtsOnly(ir: IRStyle): boolean {
   for (const src of Object.values(ir.sources)) {
     if (src.type !== "vector") continue;
-    if ("tiles" in src && Array.isArray(src.tiles) && src.tiles.length > 0) return true;
+    if ("tiles" in src && Array.isArray(src.tiles) && src.tiles.length > 0) return false;
     if ("url" in src && typeof src.url === "string" && !/\/VectorTileServer\/?$/i.test(src.url))
-      return true;
+      return false;
   }
-  return false;
+  return true;
 }
 
-type EsriSource = {
+type EsriVectorSource = {
   type: "vector";
   url?: string;
   tiles?: string[];
@@ -79,15 +34,29 @@ type EsriSource = {
   maxzoom?: number;
 };
 
+type EsriGeoJSONSource = {
+  type: "geojson";
+  data: unknown;
+  [key: string]: unknown;
+};
+
+type EsriSource = EsriVectorSource | EsriGeoJSONSource;
+
 function buildEsriSources(ir: IRStyle, ctx: TransformContext): Record<string, EsriSource> {
   const result: Record<string, EsriSource> = {};
 
   for (const [name, src] of Object.entries(ir.sources)) {
+    if (src.type === "geojson") {
+      const { type, data, ...rest } = src;
+      result[name] = { type: "geojson", data, ...rest };
+      continue;
+    }
+
     if (src.type !== "vector") continue;
 
     // Prefer resolved tiles (from TileJSON resolution via transpileAsync)
     if ("tiles" in src && Array.isArray(src.tiles) && src.tiles.length > 0) {
-      const entry: EsriSource = { type: "vector", tiles: src.tiles };
+      const entry: EsriVectorSource = { type: "vector", tiles: src.tiles };
       if (src.minzoom !== undefined) entry.minzoom = src.minzoom;
       if (src.maxzoom !== undefined) entry.maxzoom = src.maxzoom;
       result[name] = entry;
@@ -140,35 +109,34 @@ function toEsriLayer(layer: IRLayer): EsriLayerOutput {
  */
 export function emitEsri(ir: IRStyle, ctx: TransformContext): EsriStyleOutput {
   const sources = buildEsriSources(ir, ctx);
-  const nonEsriSource = hasNonEsriSources(ir);
+  const esriOnly = isEsriVtsOnly(ir);
 
-  let sprite: string;
-  let glyphs: string;
+  const irSprite = typeof ir.sprite === "string" ? ir.sprite : undefined;
+  let sprite: string | undefined;
+  let glyphs: string | undefined;
 
-  if (nonEsriSource) {
-    // Sources were resolved from TileJSON, so there is no Esri VTS.
-    // Keep absolute URLs from the IR as-is (no re-relativization needed).
-    sprite = typeof ir.sprite === "string" ? ir.sprite : ESRI_RELATIVE_SPRITE;
-    glyphs = ir.glyphs ?? ESRI_RELATIVE_GLYPHS;
+  if (esriOnly && ctx.baseUrl) {
+    // Esri VTS with a baseUrl: re-relativize for the Esri directory layout
+    sprite = ESRI_RELATIVE_SPRITE;
+    glyphs = ESRI_RELATIVE_GLYPHS;
   } else {
-    sprite = reRelativizeSprite(typeof ir.sprite === "string" ? ir.sprite : undefined, ctx);
-    glyphs = reRelativizeGlyphs(ir.glyphs, ctx);
+    // Non-Esri sources or no baseUrl: keep input URLs as-is
+    sprite = irSprite;
+    glyphs = ir.glyphs;
+  }
 
-    if (ctx.esriToken) {
-      sprite = appendToken(sprite, ctx.esriToken);
-      glyphs = appendToken(glyphs, ctx.esriToken);
-    }
+  if (ctx.esriToken) {
+    if (sprite) sprite = appendToken(sprite, ctx.esriToken);
+    if (glyphs) glyphs = appendToken(glyphs, ctx.esriToken);
   }
 
   const layers = ir.layers.map(toEsriLayer);
 
-  return {
-    version: 8,
-    sprite,
-    glyphs,
-    sources,
-    layers,
-  };
+  const output: EsriStyleOutput = { version: 8, sources, layers };
+  if (sprite !== undefined) output.sprite = sprite;
+  if (glyphs !== undefined) output.glyphs = glyphs;
+
+  return output;
 }
 
 /**
@@ -195,7 +163,7 @@ export function resolveEsriStyleUrls(style: EsriStyleOutput, baseUrl: string): E
   if (resolved.sources) {
     const newSources: typeof resolved.sources = {};
     for (const [key, src] of Object.entries(resolved.sources)) {
-      if (src.url?.startsWith("..")) {
+      if (src.type === "vector" && src.url?.startsWith("..")) {
         newSources[key] = { ...src, url: resolveEsriSourceUrl(baseUrl) };
       } else {
         newSources[key] = src;

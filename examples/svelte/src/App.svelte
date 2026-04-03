@@ -6,9 +6,11 @@
   import MaplibreMap from "./lib/MaplibreMap.svelte";
   import MapboxMap from "./lib/MapboxMap.svelte";
   import ThemeToggle from "./lib/ThemeToggle.svelte";
-  import { URL_GROUPS } from "./lib/urls";
+  import { DEFAULT_STYLE_URL, URL_GROUPS } from "./lib/urls";
 
-  let selectedUrl = $state("");
+  let selectedUrl = $state(DEFAULT_STYLE_URL);
+  let customUrl = $state("");
+  let useCustom = $state(false);
   let mapboxToken = $state(import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "");
   let loading = $state(false);
   let error = $state("");
@@ -38,13 +40,19 @@
     if (source !== "mapbox") mapboxMapRef?.syncView(c, z);
   }
 
+  let activeUrl = $derived(useCustom ? customUrl.trim() : selectedUrl);
+
+  $effect(() => {
+    if (activeUrl && !esriJson) handleFetch();
+  });
+
   async function handleFetch() {
-    if (!selectedUrl) return;
+    if (!activeUrl) return;
     loading = true;
     error = "";
 
     try {
-      const res = await fetch(selectedUrl, {
+      const res = await fetch(activeUrl, {
         signal: AbortSignal.timeout(15_000),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -52,8 +60,8 @@
       const dialect: Dialect = detect(style);
       detectedDialect = dialect;
 
-      const baseUrl = selectedUrl.includes("/VectorTileServer")
-        ? selectedUrl.replace(/\/resources\/styles\/root\.json$/, "")
+      const baseUrl = activeUrl.includes("/VectorTileServer")
+        ? activeUrl.replace(/\/resources\/styles\/root\.json$/, "")
         : undefined;
 
       const toEsri = transpile(style, {
@@ -99,21 +107,36 @@
   </a>
 
   <div class="flex items-center gap-2 flex-1 flex-wrap min-w-0">
-    <select bind:value={selectedUrl} class="select select-sm select-bordered flex-1 min-w-[180px] max-w-[400px] text-xs">
-      <option value="">Select a style URL...</option>
-      {#each URL_GROUPS as group}
-        <optgroup label={group.label}>
-          {#each group.urls as item}
-            <option value={item.url}>{item.name}</option>
-          {/each}
-        </optgroup>
-      {/each}
-    </select>
+    {#if useCustom}
+      <input
+        type="url"
+        bind:value={customUrl}
+        placeholder="Paste a style JSON URL..."
+        class="input input-sm input-bordered flex-1 min-w-[180px] max-w-[400px] text-xs font-mono"
+      />
+    {:else}
+      <select bind:value={selectedUrl} class="select select-sm select-bordered flex-1 min-w-[180px] max-w-[400px] text-xs">
+        {#each URL_GROUPS as group}
+          <optgroup label={group.label}>
+            {#each group.urls as item}
+              <option value={item.url}>{item.name}</option>
+            {/each}
+          </optgroup>
+        {/each}
+      </select>
+    {/if}
+
+    <button
+      class="btn btn-sm btn-ghost text-xs"
+      onclick={() => (useCustom = !useCustom)}
+    >
+      {useCustom ? "Presets" : "Custom URL"}
+    </button>
 
     <button
       class="btn btn-sm btn-primary"
       onclick={handleFetch}
-      disabled={!selectedUrl || loading}
+      disabled={!activeUrl || loading}
     >
       {loading ? "Loading..." : "Fetch & Transpile"}
     </button>

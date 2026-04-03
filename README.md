@@ -224,7 +224,7 @@ To run tests that hit real URLs, just have network access. No tokens needed for 
 
 ```bash
 cp .env.example .env
-# add your MAPBOX_ACCESS_TOKEN
+# add your VITE_MAPBOX_ACCESS_TOKEN
 ```
 
 ### Tech stack

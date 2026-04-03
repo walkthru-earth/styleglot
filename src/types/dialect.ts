@@ -13,11 +13,12 @@ export const DIALECTS = ["esri", "mapbox", "maplibre"] as const satisfies readon
 /** Esri output: only the 5 fields an Esri root.json supports. */
 export interface EsriStyleOutput {
   version: 8;
-  sprite: string;
-  glyphs: string;
+  sprite?: string;
+  glyphs?: string;
   sources: Record<
     string,
-    { type: "vector"; url?: string; tiles?: string[]; minzoom?: number; maxzoom?: number }
+    | { type: "vector"; url?: string; tiles?: string[]; minzoom?: number; maxzoom?: number }
+    | { type: "geojson"; data: unknown; [key: string]: unknown }
   >;
   layers: EsriLayerOutput[];
 }
