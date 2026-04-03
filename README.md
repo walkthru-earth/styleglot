@@ -204,10 +204,12 @@ tests/
 
 ```bash
 pnpm install
-pnpm lint          # type-check (tsc --noEmit)
+pnpm lint          # biome check (lint + format)
+pnpm typecheck     # tsc --noEmit
 pnpm test          # run all tests
 pnpm test:watch    # watch mode
 pnpm build         # build CJS + ESM + .d.ts to dist/
+pnpm check         # all three in sequence
 ```
 
 Tests include:
@@ -225,8 +227,8 @@ cp .env.example .env
 
 ### Tech stack
 
-- TypeScript 5.9 (ES2024 target, strict mode, erasableSyntaxOnly)
-- tsup (CJS + ESM + .d.ts builds)
+- TypeScript 6.0 (ES2024 target, strict mode, erasableSyntaxOnly)
+- tsdown (CJS + ESM + .d.ts builds)
 - Vitest (test runner)
 - Zero runtime dependencies
 
