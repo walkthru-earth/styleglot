@@ -78,7 +78,7 @@ describe("stripLossy", () => {
     expect(out["font-faces"]).toBeUndefined();
   });
 
-  it("does not strip anything when targeting MapLibre", () => {
+  it("preserves standard properties and layers when targeting MapLibre", () => {
     const style = makeStyle({
       name: "My Style",
       metadata: { foo: "bar" },
@@ -94,6 +94,42 @@ describe("stripLossy", () => {
     expect(result.name).toBe("My Style");
     expect(result.layers).toHaveLength(2);
     expect(ctx.warnings).toHaveLength(0);
+  });
+
+  it("drops Mapbox-proprietary layer types when targeting MapLibre", () => {
+    const style = makeStyle({
+      layers: [
+        { id: "bg", type: "background" },
+        { id: "bld", type: "building", source: "s", paint: {} },
+        { id: "mdl", type: "model", source: "s", paint: {} },
+        { id: "slt", type: "slot", source: "s", paint: {} },
+        { id: "clp", type: "clip", source: "s", paint: {} },
+        { id: "rp", type: "raster-particle", source: "s", paint: {} },
+        { id: "fill", type: "fill", source: "s", paint: {} },
+      ] as IRStyle["layers"],
+    });
+
+    const ctx = makeCtx({ targetDialect: "maplibre" });
+    const result = stripLossy(style, ctx);
+
+    const ids = result.layers.map((l) => l.id);
+    expect(ids).toEqual(["bg", "fill"]);
+    expect(ctx.warnings).toHaveLength(5);
+  });
+
+  it("strips centerAltitude and roll when targeting Esri", () => {
+    const style = makeStyle({});
+    const record = style as unknown as Record<string, unknown>;
+    record.centerAltitude = 500;
+    record.roll = 15;
+
+    const ctx = makeCtx({ sourceDialect: "maplibre", targetDialect: "esri" });
+    const result = stripLossy(style, ctx);
+
+    const out = result as unknown as Record<string, unknown>;
+    expect(out.centerAltitude).toBeUndefined();
+    expect(out.roll).toBeUndefined();
+    expect(ctx.warnings.some((w) => w.code === "LOSSY_CAMERA")).toBe(true);
   });
 
   it("throws in strict mode on lossy layer removal", () => {

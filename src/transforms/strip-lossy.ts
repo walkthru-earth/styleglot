@@ -6,6 +6,15 @@ import { createWarning, deepClone } from "../utils.ts";
 /** Layer types to drop when targeting Mapbox. */
 const MAPBOX_UNSUPPORTED_LAYER_TYPES = new Set(["color-relief"]);
 
+/** Layer types to drop when targeting MapLibre (Mapbox-proprietary). */
+const MAPLIBRE_UNSUPPORTED_LAYER_TYPES = new Set([
+  "building",
+  "model",
+  "slot",
+  "clip",
+  "raster-particle",
+]);
+
 /** Layer types to drop when targeting Esri (complement of supported set). */
 const ESRI_UNSUPPORTED_LAYER_TYPES = new Set([
   "raster",
@@ -37,6 +46,8 @@ const ESRI_STRIP_KEYS = [
   "transition",
   "state",
   "font-faces",
+  "centerAltitude",
+  "roll",
 ] as const;
 
 /**
@@ -68,6 +79,8 @@ export function stripLossy(style: IRStyle, ctx: TransformContext): IRStyle {
     unsupportedTypes = MAPBOX_UNSUPPORTED_LAYER_TYPES;
   } else if (ctx.targetDialect === "esri") {
     unsupportedTypes = ESRI_UNSUPPORTED_LAYER_TYPES;
+  } else if (ctx.targetDialect === "maplibre") {
+    unsupportedTypes = MAPLIBRE_UNSUPPORTED_LAYER_TYPES;
   }
 
   if (unsupportedTypes != null) {
