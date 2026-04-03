@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { TransformContext } from "../types/options.ts";
 import type { IRStyle } from "../types/style.ts";
-import { emitEsri } from "./esri.ts";
+import { emitEsri, resolveEsriStyleUrls } from "./esri.ts";
 
 function makeCtx(overrides?: Partial<TransformContext>): TransformContext {
   return {
@@ -49,30 +49,15 @@ describe("emitEsri", () => {
     expect(keys).toHaveLength(5);
   });
 
-  it("re-relativizes sprite to ../sprites/sprite when baseUrl is provided", () => {
+  it("preserves original source names", () => {
     const ctx = makeCtx({ baseUrl: BASE_URL });
     const output = emitEsri(makeIR(), ctx);
 
-    expect(output.sprite).toBe("../sprites/sprite");
+    expect(output.sources).toHaveProperty("composite");
+    expect(output.sources).not.toHaveProperty("esri");
   });
 
-  it("re-relativizes glyphs to ../fonts/{fontstack}/{range}.pbf when baseUrl is provided", () => {
-    const ctx = makeCtx({ baseUrl: BASE_URL });
-    const output = emitEsri(makeIR(), ctx);
-
-    expect(output.glyphs).toBe("../fonts/{fontstack}/{range}.pbf");
-  });
-
-  it("converts source back to Esri format with relative url", () => {
-    const ctx = makeCtx({ baseUrl: BASE_URL });
-    const output = emitEsri(makeIR(), ctx);
-
-    expect(output.sources).toEqual({
-      esri: { type: "vector", url: "../../" },
-    });
-  });
-
-  it("sets layer source to 'esri' for non-background layers", () => {
+  it("preserves original layer source references", () => {
     const ctx = makeCtx({ baseUrl: BASE_URL });
     const output = emitEsri(makeIR(), ctx);
 
@@ -80,11 +65,133 @@ describe("emitEsri", () => {
     const fillLayer = output.layers.find((l) => l.id === "fill");
 
     expect(bgLayer?.source).toBeUndefined();
-    expect(fillLayer?.source).toBe("esri");
+    expect(fillLayer?.source).toBe("composite");
   });
 
-  it("keeps absolute URLs and emits warnings when no baseUrl is provided", () => {
+  it("preserves multiple sources", () => {
+    const ctx = makeCtx();
     const ir = makeIR({
+      sources: {
+        openmaptiles: { type: "vector", url: "https://a.example.com/tiles.json" },
+        terrain: { type: "vector", url: "https://b.example.com/tiles.json" },
+      },
+    });
+    const output = emitEsri(ir, ctx);
+
+    expect(Object.keys(output.sources)).toEqual(["openmaptiles", "terrain"]);
+  });
+
+  it("re-relativizes sprite when baseUrl is provided and source is Esri", () => {
+    const ctx = makeCtx({ baseUrl: BASE_URL });
+    const ir = makeIR({
+      sources: { esri: { type: "vector", url: `${BASE_URL}` } },
+    });
+    const output = emitEsri(ir, ctx);
+
+    expect(output.sprite).toBe("../sprites/sprite");
+  });
+
+  it("re-relativizes glyphs when baseUrl is provided and source is Esri", () => {
+    const ctx = makeCtx({ baseUrl: BASE_URL });
+    const ir = makeIR({
+      sources: { esri: { type: "vector", url: `${BASE_URL}` } },
+    });
+    const output = emitEsri(ir, ctx);
+
+    expect(output.glyphs).toBe("../fonts/{fontstack}/{range}.pbf");
+  });
+
+  it("uses resolved tiles from IR sources when available", () => {
+    const ctx = makeCtx({ baseUrl: BASE_URL });
+    const output = emitEsri(makeIR(), ctx);
+
+    expect(output.sources.composite).toEqual({
+      type: "vector",
+      tiles: ["https://example.com/{z}/{x}/{y}.pbf"],
+    });
+  });
+
+  it("keeps absolute sprite/glyphs when sources have resolved tiles", () => {
+    const ctx = makeCtx({ baseUrl: BASE_URL });
+    const output = emitEsri(makeIR(), ctx);
+
+    expect(output.sprite).toBe("https://example.com/sprites/sprite");
+    expect(output.glyphs).toBe("https://example.com/fonts/{fontstack}/{range}.pbf");
+    expect(ctx.warnings).toHaveLength(0);
+  });
+
+  it("passes through TileJSON url when tiles are not resolved", () => {
+    const ctx = makeCtx({ baseUrl: BASE_URL });
+    const ir = makeIR({
+      sources: { openmaptiles: { type: "vector", url: "https://example.com/tiles.json" } },
+    });
+    const output = emitEsri(ir, ctx);
+
+    expect(output.sources.openmaptiles).toEqual({
+      type: "vector",
+      url: "https://example.com/tiles.json",
+    });
+  });
+
+  it("keeps absolute sprite/glyphs when source has TileJSON url", () => {
+    const ctx = makeCtx();
+    const ir = makeIR({
+      sources: { openmaptiles: { type: "vector", url: "https://example.com/tiles.json" } },
+    });
+    const output = emitEsri(ir, ctx);
+
+    expect(output.sprite).toBe("https://example.com/sprites/sprite");
+    expect(output.glyphs).toBe("https://example.com/fonts/{fontstack}/{range}.pbf");
+    expect(ctx.warnings).toHaveLength(0);
+  });
+
+  it("falls back to relative url when source is Esri VTS", () => {
+    const ctx = makeCtx({ baseUrl: BASE_URL });
+    const ir = makeIR({
+      sources: { esri: { type: "vector", url: `${BASE_URL}` } },
+    });
+    const output = emitEsri(ir, ctx);
+
+    expect(output.sources.esri).toEqual({
+      type: "vector",
+      url: "../../",
+    });
+  });
+
+  it("falls back to relative url when no source url or tiles exist", () => {
+    const ctx = makeCtx({ baseUrl: BASE_URL });
+    const ir = makeIR({
+      sources: { composite: { type: "vector" } },
+    });
+    const output = emitEsri(ir, ctx);
+
+    expect(output.sources.composite).toEqual({
+      type: "vector",
+      url: "../../",
+    });
+  });
+
+  it("includes minzoom/maxzoom when tiles are resolved", () => {
+    const ctx = makeCtx();
+    const ir = makeIR({
+      sources: {
+        openmaptiles: {
+          type: "vector",
+          tiles: ["https://example.com/{z}/{x}/{y}.pbf"],
+          minzoom: 0,
+          maxzoom: 14,
+        },
+      },
+    });
+    const output = emitEsri(ir, ctx);
+
+    expect(output.sources.openmaptiles.minzoom).toBe(0);
+    expect(output.sources.openmaptiles.maxzoom).toBe(14);
+  });
+
+  it("keeps absolute URLs and emits warnings when no baseUrl and Esri source", () => {
+    const ir = makeIR({
+      sources: { composite: { type: "vector" } },
       sprite: "https://example.com/sprites/sprite",
       glyphs: "https://example.com/fonts/{fontstack}/{range}.pbf",
     });
@@ -96,5 +203,62 @@ describe("emitEsri", () => {
     expect(output.glyphs).toBe("https://example.com/fonts/{fontstack}/{range}.pbf");
     expect(ctx.warnings.length).toBeGreaterThan(0);
     expect(ctx.warnings.some((w) => w.code === "ESRI_ITEM_URL_NEEDS_BASE")).toBe(true);
+  });
+});
+
+describe("resolveEsriStyleUrls", () => {
+  const BASE_URL =
+    "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer";
+
+  it("resolves relative sprite and glyphs to absolute", () => {
+    const style = {
+      version: 8 as const,
+      sprite: "../sprites/sprite",
+      glyphs: "../fonts/{fontstack}/{range}.pbf",
+      sources: { esri: { type: "vector" as const, url: "../../" } },
+      layers: [],
+    };
+
+    const resolved = resolveEsriStyleUrls(style, BASE_URL);
+
+    expect(resolved.sprite).toBe(`${BASE_URL}/resources/sprites/sprite`);
+    expect(resolved.glyphs).toBe(`${BASE_URL}/resources/fonts/{fontstack}/{range}.pbf`);
+  });
+
+  it("resolves relative source url to tile endpoint", () => {
+    const style = {
+      version: 8 as const,
+      sprite: "../sprites/sprite",
+      glyphs: "../fonts/{fontstack}/{range}.pbf",
+      sources: { esri: { type: "vector" as const, url: "../../" } },
+      layers: [],
+    };
+
+    const resolved = resolveEsriStyleUrls(style, BASE_URL);
+
+    expect(resolved.sources.esri.url).toBe(`${BASE_URL}/tile/{z}/{y}/{x}.pbf`);
+  });
+
+  it("leaves absolute URLs untouched", () => {
+    const style = {
+      version: 8 as const,
+      sprite: "https://other.com/sprites/sprite",
+      glyphs: "https://other.com/fonts/{fontstack}/{range}.pbf",
+      sources: {
+        openmaptiles: {
+          type: "vector" as const,
+          tiles: ["https://tiles.example.com/{z}/{x}/{y}.pbf"],
+        },
+      },
+      layers: [],
+    };
+
+    const resolved = resolveEsriStyleUrls(style, BASE_URL);
+
+    expect(resolved.sprite).toBe("https://other.com/sprites/sprite");
+    expect(resolved.glyphs).toBe("https://other.com/fonts/{fontstack}/{range}.pbf");
+    expect(resolved.sources.openmaptiles.tiles).toEqual([
+      "https://tiles.example.com/{z}/{x}/{y}.pbf",
+    ]);
   });
 });
