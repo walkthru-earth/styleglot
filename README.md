@@ -1,5 +1,10 @@
 # Styleglot
 
+[![npm version](https://img.shields.io/npm/v/@walkthru-earth/styleglot)](https://www.npmjs.com/package/@walkthru-earth/styleglot)
+[![CI](https://github.com/walkthru-earth/styleglot/actions/workflows/ci.yml/badge.svg)](https://github.com/walkthru-earth/styleglot/actions/workflows/ci.yml)
+[![License: CC-BY-4.0](https://img.shields.io/badge/License-CC--BY--4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](https://www.npmjs.com/package/@walkthru-earth/styleglot)
+
 Babel for map styles. A zero-dependency TypeScript library that transpiles between Esri, Mapbox, and MapLibre vector tile style specifications.
 
 Parse any dialect into a canonical intermediate representation (IR), run transforms, emit any target dialect. 6 conversion directions, fully typed, lossy-aware.
@@ -38,7 +43,7 @@ The output type is inferred from `toDialect`:
 // Fully typed - result.output is MaplibreStyleOutput
 const a = transpile<"maplibre">(style, { toDialect: "maplibre" });
 
-// result.output is EsriStyleOutput (exactly 5 keys)
+// result.output is EsriStyleOutput
 const b = transpile<"esri">(style, { toDialect: "esri", baseUrl: "..." });
 
 // result.output is MapboxStyleOutput
@@ -80,6 +85,38 @@ transpile(input: unknown, options: TranspileOptions): TranspileResult
 | `modernizeExpressions` | `boolean` | No | Convert legacy stops to expressions |
 | `strict` | `boolean` | No | Throw on lossy conversions |
 | `plugins` | `Plugin[]` | No | Custom transform plugins |
+
+### `transpileAsync(input, options)`
+
+Async version that resolves TileJSON source URLs before transpiling. This allows non-Esri styles (Stadia, OpenFreeMap, etc.) to produce Esri output with real tile URLs.
+
+```typescript
+import { transpileAsync } from "@walkthru-earth/styleglot";
+
+const result = await transpileAsync(stadiaStyle, {
+  toDialect: "esri",
+  resolveSources: true,  // fetch TileJSON URLs and inline tile arrays
+});
+```
+
+Accepts the same options as `transpile()` plus:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `resolveSources` | `boolean` | Fetch TileJSON URLs and inline resolved tile arrays |
+| `fetch` | `typeof fetch` | Custom fetch function (defaults to global `fetch`) |
+
+### `resolveEsriStyleUrls(style, baseUrl)`
+
+Resolves relative URLs in Esri style output to absolute URLs. Useful when consuming the style directly without a VectorTileServer endpoint.
+
+```typescript
+import { transpile, resolveEsriStyleUrls } from "@walkthru-earth/styleglot";
+
+const { output } = transpile(esriStyle, { toDialect: "esri", baseUrl });
+const resolved = resolveEsriStyleUrls(output, baseUrl);
+// resolved.sprite, .glyphs, .sources now have absolute URLs
+```
 
 ### `detect(input)`
 
@@ -319,7 +356,7 @@ These properties exist in one dialect but not another. They are stashed in `_ext
 
 1. No tile data transformation. Only style JSON is transpiled, not vector tile content.
 2. No runtime mutation. The library produces static style JSON, not a live style object.
-3. No network fetching by default. The core library is fetch-free. You fetch the style JSON yourself and pass the object directly.
+3. No network fetching by default. The core `transpile()` is fetch-free. Use `transpileAsync()` with `resolveSources: true` for TileJSON resolution.
 4. Font and sprite assets are not bundled. Font mapping translates names, but the actual font PBF/sprite PNG files must be hosted separately.
 5. Proprietary features are lossy. Mapbox fog, lights, imports, style composition, PBR properties. MapLibre multi-sprite, global-state, font-faces. These are dropped (with warnings) when targeting a dialect that does not support them.
 6. Esri styles with non-Web Mercator projections are not supported.
