@@ -80,7 +80,9 @@ function sanitizeExpression(
   }
 
   while (stack.length > 0) {
-    const { parent, index } = stack.pop()!;
+    const entry = stack.pop();
+    if (!entry) break;
+    const { parent, index } = entry;
     const child = parent[index] as unknown[];
     const op = child[0] as string;
 

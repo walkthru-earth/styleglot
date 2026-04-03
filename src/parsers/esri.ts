@@ -82,7 +82,7 @@ export function parseEsri(input: Record<string, unknown>, ctx: TransformContext)
   }
 
   // --- Warnings ---
-  if (baseUrl && baseUrl.includes("/items/")) {
+  if (baseUrl?.includes("/items/")) {
     ctx.warnings.push(
       createWarning(
         WARNING_CODES.ESRI_ITEM_URL_NEEDS_BASE,

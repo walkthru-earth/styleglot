@@ -73,7 +73,8 @@ function replaceInExpression(expr: unknown[], mapping: Record<string, string>): 
   const stack: unknown[][] = [root];
 
   while (stack.length > 0) {
-    const current = stack.pop()!;
+    const current = stack.pop();
+    if (!current) break;
 
     for (let i = 0; i < current.length; i++) {
       const child = current[i];
