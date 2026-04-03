@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { transpile, detect, resolveEsriStyleUrls } from "@walkthru-earth/styleglot";
-  import type { Dialect, EsriStyleOutput } from "@walkthru-earth/styleglot";
+  import { transpile, detect } from "@walkthru-earth/styleglot";
+  import type { ConversionWarning, Dialect, EsriStyleOutput } from "@walkthru-earth/styleglot";
   import CodeEditor from "./lib/CodeEditor.svelte";
   import EsriMap from "./lib/EsriMap.svelte";
   import MaplibreMap from "./lib/MaplibreMap.svelte";
@@ -19,7 +19,11 @@
   let esriJson = $state("");
   let maplibreJson = $state("");
   let mapboxJson = $state("");
+  let esriWarnings = $state<ConversionWarning[]>([]);
+  let maplibreWarnings = $state<ConversionWarning[]>([]);
+  let mapboxWarnings = $state<ConversionWarning[]>([]);
   let hasEsriSource = $state(false);
+  let esriServiceUrl = $state("");
 
   let center = $state<[number, number]>([0, 30]);
   let zoom = $state(2);
@@ -82,15 +86,18 @@
         baseUrl,
       });
 
-      const esriOutput = baseUrl
-        ? resolveEsriStyleUrls(toEsri.output as EsriStyleOutput, baseUrl)
-        : toEsri.output;
-      const sources = (esriOutput as EsriStyleOutput).sources ?? {};
+      const isVts = !!baseUrl && /\/VectorTileServer\/?$/i.test(baseUrl);
+      esriServiceUrl = isVts ? baseUrl : "";
+      const esriOutput = toEsri.output as EsriStyleOutput;
+      const sources = esriOutput.sources ?? {};
       const anySrc = Object.values(sources)[0];
-      hasEsriSource = !!baseUrl || !!(anySrc?.tiles?.length) || !!(anySrc?.url);
+      hasEsriSource = isVts || !!(anySrc?.tiles?.length) || !!(anySrc?.url);
       esriJson = JSON.stringify(esriOutput, null, 2);
       maplibreJson = JSON.stringify(toMaplibre.output, null, 2);
       mapboxJson = JSON.stringify(toMapbox.output, null, 2);
+      esriWarnings = toEsri.warnings;
+      maplibreWarnings = toMaplibre.warnings;
+      mapboxWarnings = toMapbox.warnings;
     } catch (e: any) {
       error = e.message || "Failed to fetch style";
     }
@@ -172,14 +179,25 @@
 <div class="flex flex-1 overflow-hidden">
   <!-- Esri column -->
   <div class="flex flex-col flex-1 border-r border-base-300 overflow-hidden">
-    <div class="h-[40%] border-b border-base-300 overflow-hidden">
+    <div class="h-[38%] border-b border-base-300 overflow-hidden">
       <CodeEditor content={esriJson} label="Esri" onchange={(v) => (esriJson = v)} />
     </div>
-    <div class="h-[60%] overflow-hidden">
+    {#if esriWarnings.length > 0}
+      <div class="max-h-[12%] overflow-y-auto border-b border-base-300 bg-base-200/50 px-2 py-1 text-[10px] leading-tight space-y-0.5">
+        {#each esriWarnings as w}
+          <div class="flex items-start gap-1.5">
+            <span class={`badge badge-xs shrink-0 mt-px ${w.severity === "drop" ? "badge-error" : w.severity === "warn" ? "badge-warning" : "badge-info"}`}>{w.severity}</span>
+            <span class="text-base-content/70 break-words">{w.message}</span>
+          </div>
+        {/each}
+      </div>
+    {/if}
+    <div class="flex-1 overflow-hidden">
       {#if hasEsriSource}
         <EsriMap
           bind:this={esriMapRef}
           styleJson={esriJson}
+          serviceUrl={esriServiceUrl}
           bind:center
           bind:zoom
           onmove={(c, z) => handleMapMove("esri", c, z)}
@@ -195,10 +213,20 @@
 
   <!-- MapLibre column -->
   <div class="flex flex-col flex-1 border-r border-base-300 overflow-hidden">
-    <div class="h-[40%] border-b border-base-300 overflow-hidden">
+    <div class="h-[38%] border-b border-base-300 overflow-hidden">
       <CodeEditor content={maplibreJson} label="MapLibre" onchange={(v) => (maplibreJson = v)} />
     </div>
-    <div class="h-[60%] overflow-hidden">
+    {#if maplibreWarnings.length > 0}
+      <div class="max-h-[12%] overflow-y-auto border-b border-base-300 bg-base-200/50 px-2 py-1 text-[10px] leading-tight space-y-0.5">
+        {#each maplibreWarnings as w}
+          <div class="flex items-start gap-1.5">
+            <span class={`badge badge-xs shrink-0 mt-px ${w.severity === "drop" ? "badge-error" : w.severity === "warn" ? "badge-warning" : "badge-info"}`}>{w.severity}</span>
+            <span class="text-base-content/70 break-words">{w.message}</span>
+          </div>
+        {/each}
+      </div>
+    {/if}
+    <div class="flex-1 overflow-hidden">
       <MaplibreMap
         bind:this={maplibreMapRef}
         styleJson={maplibreJson}
@@ -211,10 +239,20 @@
 
   <!-- Mapbox column -->
   <div class="flex flex-col flex-1 overflow-hidden">
-    <div class="h-[40%] border-b border-base-300 overflow-hidden">
+    <div class="h-[38%] border-b border-base-300 overflow-hidden">
       <CodeEditor content={mapboxJson} label="Mapbox" onchange={(v) => (mapboxJson = v)} />
     </div>
-    <div class="h-[60%] overflow-hidden">
+    {#if mapboxWarnings.length > 0}
+      <div class="max-h-[12%] overflow-y-auto border-b border-base-300 bg-base-200/50 px-2 py-1 text-[10px] leading-tight space-y-0.5">
+        {#each mapboxWarnings as w}
+          <div class="flex items-start gap-1.5">
+            <span class={`badge badge-xs shrink-0 mt-px ${w.severity === "drop" ? "badge-error" : w.severity === "warn" ? "badge-warning" : "badge-info"}`}>{w.severity}</span>
+            <span class="text-base-content/70 break-words">{w.message}</span>
+          </div>
+        {/each}
+      </div>
+    {/if}
+    <div class="flex-1 overflow-hidden">
       <MapboxMap
         bind:this={mapboxMapRef}
         styleJson={mapboxJson}

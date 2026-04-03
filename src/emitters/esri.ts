@@ -8,13 +8,10 @@ import { appendToken } from "../url/token.ts";
 // Esri root.json emitter
 // ---------------------------------------------------------------------------
 
-const ESRI_RELATIVE_SPRITE = "../sprites/sprite";
-const ESRI_RELATIVE_GLYPHS = "../fonts/{fontstack}/{range}.pbf";
-
 /**
  * Check whether all vector sources point to an Esri VTS endpoint.
- * When false, sprite/glyphs should stay absolute because there is no
- * Esri directory structure to be relative to.
+ * When false, sprite/glyphs should use the IR values because there is no
+ * Esri directory structure to resolve against.
  */
 function isEsriVtsOnly(ir: IRStyle): boolean {
   for (const src of Object.values(ir.sources)) {
@@ -54,6 +51,21 @@ function buildEsriSources(ir: IRStyle, ctx: TransformContext): Record<string, Es
 
     if (src.type !== "vector") continue;
 
+    // Tiles resolved from the same Esri VTS baseUrl: emit absolute tile URL
+    const tilesFromVts =
+      ctx.baseUrl &&
+      "tiles" in src &&
+      Array.isArray(src.tiles) &&
+      src.tiles.length > 0 &&
+      src.tiles[0].startsWith(ctx.baseUrl);
+
+    if (tilesFromVts && ctx.baseUrl) {
+      let url = resolveEsriSourceUrl(ctx.baseUrl);
+      if (ctx.esriToken) url = appendToken(url, ctx.esriToken);
+      result[name] = { type: "vector", url };
+      continue;
+    }
+
     // Prefer resolved tiles (from TileJSON resolution via transpileAsync)
     if ("tiles" in src && Array.isArray(src.tiles) && src.tiles.length > 0) {
       const entry: EsriVectorSource = { type: "vector", tiles: src.tiles };
@@ -69,12 +81,15 @@ function buildEsriSources(ir: IRStyle, ctx: TransformContext): Record<string, Es
       continue;
     }
 
-    // Esri VTS source: use relative URL
-    let url = "../../";
-    if (ctx.esriToken) {
-      url = appendToken(url, ctx.esriToken);
+    // Esri VTS source with baseUrl: emit absolute tile URL
+    if (ctx.baseUrl) {
+      let url = resolveEsriSourceUrl(ctx.baseUrl);
+      if (ctx.esriToken) url = appendToken(url, ctx.esriToken);
+      result[name] = { type: "vector", url };
+    } else {
+      // No baseUrl: emit relative as last resort
+      result[name] = { type: "vector" };
     }
-    result[name] = { type: "vector", url };
   }
 
   return result;
@@ -100,12 +115,8 @@ function toEsriLayer(layer: IRLayer): EsriLayerOutput {
 /**
  * Emit an Esri root.json style from the intermediate representation.
  *
- * The output contains exactly 5 top-level keys:
- * `version`, `sprite`, `glyphs`, `sources`, `layers`.
- *
- * When IR sources have resolved tile URLs (from TileJSON), sprite and glyphs
- * are kept as absolute URLs from the IR since there is no Esri VTS to be
- * relative to. Otherwise they are re-relativized for the Esri directory layout.
+ * When a `baseUrl` is available, all URLs (sources, sprite, glyphs) are
+ * emitted as fully resolved absolute URLs. No relative `../` paths.
  */
 export function emitEsri(ir: IRStyle, ctx: TransformContext): EsriStyleOutput {
   const sources = buildEsriSources(ir, ctx);
@@ -116,9 +127,9 @@ export function emitEsri(ir: IRStyle, ctx: TransformContext): EsriStyleOutput {
   let glyphs: string | undefined;
 
   if (esriOnly && ctx.baseUrl) {
-    // Esri VTS with a baseUrl: re-relativize for the Esri directory layout
-    sprite = ESRI_RELATIVE_SPRITE;
-    glyphs = ESRI_RELATIVE_GLYPHS;
+    // All sources are Esri VTS: resolve to absolute Esri resource URLs
+    sprite = resolveEsriSpriteUrl(ctx.baseUrl, "../sprites/sprite");
+    glyphs = resolveEsriGlyphUrl(ctx.baseUrl, "../fonts/{fontstack}/{range}.pbf");
   } else {
     // Non-Esri sources or no baseUrl: keep input URLs as-is
     sprite = irSprite;
@@ -142,12 +153,11 @@ export function emitEsri(ir: IRStyle, ctx: TransformContext): EsriStyleOutput {
 /**
  * Resolve relative URLs in an Esri style output to absolute URLs.
  *
- * Esri root.json uses paths relative to `{baseUrl}/resources/styles/root.json`.
- * This utility resolves them so the style can be consumed directly by
- * `VectorTileLayer({ style })` without needing a VectorTileServer endpoint.
+ * Kept for backward compatibility. If you use `emitEsri` with a `baseUrl`,
+ * the output already contains absolute URLs and this function is a no-op.
  *
- * Only resolves URLs that start with `..` (relative paths). Absolute URLs
- * and styles with resolved tiles are left untouched.
+ * For styles loaded from external sources that contain relative `../` paths,
+ * this utility resolves them against the given baseUrl.
  */
 export function resolveEsriStyleUrls(style: EsriStyleOutput, baseUrl: string): EsriStyleOutput {
   const resolved = { ...style };

@@ -9,11 +9,13 @@
 
   let {
     styleJson = "",
+    serviceUrl = "",
     center = $bindable([0, 30] as [number, number]),
     zoom = $bindable(2),
     onmove,
   }: {
     styleJson?: string;
+    serviceUrl?: string;
     center?: [number, number];
     zoom?: number;
     onmove?: (center: [number, number], zoom: number) => void;
@@ -73,7 +75,9 @@
     if (!parsed.sources || Object.keys(parsed.sources).length === 0) return;
     prevStyleJson = styleJson;
 
-    const layer = new VectorTileLayer({ style: parsed });
+    const layer = serviceUrl
+      ? new VectorTileLayer({ url: serviceUrl })
+      : new VectorTileLayer({ style: parsed });
     layer.load().then(() => {
       if (view) view.map.basemap = new Basemap({ baseLayers: [layer] });
     }).catch((err: any) => {

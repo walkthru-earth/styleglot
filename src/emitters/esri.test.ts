@@ -81,24 +81,24 @@ describe("emitEsri", () => {
     expect(Object.keys(output.sources)).toEqual(["openmaptiles", "terrain"]);
   });
 
-  it("re-relativizes sprite when baseUrl is provided and source is Esri", () => {
+  it("emits absolute sprite URL when baseUrl is provided and source is Esri", () => {
     const ctx = makeCtx({ baseUrl: BASE_URL });
     const ir = makeIR({
       sources: { esri: { type: "vector", url: `${BASE_URL}` } },
     });
     const output = emitEsri(ir, ctx);
 
-    expect(output.sprite).toBe("../sprites/sprite");
+    expect(output.sprite).toBe(`${BASE_URL}/resources/sprites/sprite`);
   });
 
-  it("re-relativizes glyphs when baseUrl is provided and source is Esri", () => {
+  it("emits absolute glyphs URL when baseUrl is provided and source is Esri", () => {
     const ctx = makeCtx({ baseUrl: BASE_URL });
     const ir = makeIR({
       sources: { esri: { type: "vector", url: `${BASE_URL}` } },
     });
     const output = emitEsri(ir, ctx);
 
-    expect(output.glyphs).toBe("../fonts/{fontstack}/{range}.pbf");
+    expect(output.glyphs).toBe(`${BASE_URL}/resources/fonts/{fontstack}/{range}.pbf`);
   });
 
   it("uses resolved tiles from IR sources when available", () => {
@@ -145,7 +145,7 @@ describe("emitEsri", () => {
     expect(ctx.warnings).toHaveLength(0);
   });
 
-  it("falls back to relative url when source is Esri VTS", () => {
+  it("emits absolute tile URL when source is Esri VTS", () => {
     const ctx = makeCtx({ baseUrl: BASE_URL });
     const ir = makeIR({
       sources: { esri: { type: "vector", url: `${BASE_URL}` } },
@@ -154,11 +154,11 @@ describe("emitEsri", () => {
 
     expect(output.sources.esri).toEqual({
       type: "vector",
-      url: "../../",
+      url: `${BASE_URL}/tile/{z}/{y}/{x}.pbf`,
     });
   });
 
-  it("falls back to relative url when no source url or tiles exist", () => {
+  it("emits absolute tile URL when no source url or tiles exist", () => {
     const ctx = makeCtx({ baseUrl: BASE_URL });
     const ir = makeIR({
       sources: { composite: { type: "vector" } },
@@ -167,7 +167,7 @@ describe("emitEsri", () => {
 
     expect(output.sources.composite).toEqual({
       type: "vector",
-      url: "../../",
+      url: `${BASE_URL}/tile/{z}/{y}/{x}.pbf`,
     });
   });
 
@@ -201,6 +201,24 @@ describe("emitEsri", () => {
 
     expect(output.sprite).toBe("https://example.com/sprites/sprite");
     expect(output.glyphs).toBe("https://example.com/fonts/{fontstack}/{range}.pbf");
+  });
+
+  it("emits absolute tile URL for tiles originating from the same VTS baseUrl", () => {
+    const ctx = makeCtx({ baseUrl: BASE_URL });
+    const ir = makeIR({
+      sources: {
+        esri: {
+          type: "vector",
+          tiles: [`${BASE_URL}/tile/{z}/{y}/{x}.pbf`],
+        },
+      },
+    });
+    const output = emitEsri(ir, ctx);
+
+    expect(output.sources.esri).toEqual({
+      type: "vector",
+      url: `${BASE_URL}/tile/{z}/{y}/{x}.pbf`,
+    });
   });
 });
 
