@@ -19,16 +19,18 @@ Also works with npm and yarn. Requires Node 18+.
 ```typescript
 import { transpile } from "styleglot";
 
-// Esri -> MapLibre
+// Pass a style object directly (no fetching needed)
 const result = transpile(esriRootJson, {
   toDialect: "maplibre",
   baseUrl: "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
 });
 
-console.log(result.output);   // valid MapLibre style JSON
+console.log(result.output);    // valid MapLibre style JSON
 console.log(result.warnings);  // any lossy conversions
 console.log(result.ir);        // intermediate representation for debugging
 ```
+
+The input can be a plain JS object or a JSON string. The library does not fetch URLs, so you fetch the style yourself and pass the result directly.
 
 The output type is inferred from `toDialect`:
 
@@ -248,11 +250,76 @@ To add a new transform, create a file in `src/transforms/`, add it to the pipeli
 To add a new dialect, you need a parser in `src/parsers/`, an emitter in `src/emitters/`, a detection scorer in `src/detect/`, and corresponding type definitions.
 
 
+## Conversion warnings
+
+Every lossy or unsupported feature produces a warning in `result.warnings` with a code, message, and severity (`info`, `warn`, or `drop`). The table below lists all known warning codes.
+
+### Lossy top-level features
+
+These properties exist in one dialect but not another. They are stashed in `_extensions` and dropped from the output.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `LOSSY_FOG` | drop | Mapbox `fog` dropped when targeting MapLibre or Esri |
+| `LOSSY_LIGHTS` | drop | Mapbox `lights` dropped when targeting MapLibre or Esri |
+| `LOSSY_IMPORTS` | drop | Mapbox `imports` / style composition dropped |
+| `LOSSY_SCHEMA` | drop | Mapbox-only top-level keys (`name`, `metadata`, `center`, `zoom`, `bearing`, `pitch`, `transition`) dropped for Esri |
+| `LOSSY_SNOW` | drop | Mapbox `snow` dropped |
+| `LOSSY_RAIN` | drop | Mapbox `rain` dropped |
+| `LOSSY_CAMERA` | drop | Mapbox `centerAltitude` / `roll` dropped |
+| `LOSSY_COLOR_THEME` | drop | Mapbox `colorTheme` dropped |
+| `LOSSY_MODELS` | drop | Mapbox `models` dropped |
+| `LOSSY_STATE` | drop | MapLibre `state` dropped when targeting Mapbox or Esri |
+| `LOSSY_FONT_FACES` | drop | MapLibre `font-faces` dropped when targeting Mapbox or Esri |
+| `LOSSY_TERRAIN` | drop | MapLibre `terrain` dropped when targeting Esri |
+| `LOSSY_SKY` | drop | MapLibre `sky` dropped when targeting Esri |
+| `LOSSY_LIGHT` | drop | Top-level `light` dropped when targeting Esri |
+
+### Layer and property issues
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `UNSUPPORTED_LAYER_TYPE` | drop | Layer type not supported by target (e.g., `heatmap`, `hillshade`, `raster` for Esri) |
+| `UNSUPPORTED_PROPERTY` | warn | Paint/layout property not recognized by target dialect |
+| `UNSUPPORTED_EXPRESSION` | warn | Expression operator stripped (e.g., Mapbox-only operators targeting MapLibre) |
+
+### Font issues
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `PROPRIETARY_FONT` | warn | Proprietary font stack detected with no mapping provided (e.g., `DIN Pro` without `fontMapping`) |
+
+### Source and URL issues
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `PMTILES_UNSUPPORTED_TARGET` | warn | PMTiles source used but target is not MapLibre (only MapLibre supports `pmtiles://` natively) |
+| `MAPBOX_COMPOSITE_SOURCE` | info | Mapbox composite source detected |
+| `MULTI_SPRITE_COLLAPSED` | info | MapLibre multi-sprite array collapsed to a single string for Mapbox/Esri |
+| `MLT_ENCODING_UNSUPPORTED` | warn | MLT tile encoding not supported by target |
+
+### Esri-specific
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `ESRI_ITEM_URL_NEEDS_BASE` | info | Esri `/items/` URL detected, may need a `baseUrl` for correct resolution |
+| `ESRI_TOKEN_DETECTED` | info | Esri API token found in input URL |
+| `ESRI_TOKEN_IN_OUTPUT` | warn | Esri token present in output URLs (review before publishing) |
+| `NON_MERCATOR_PROJECTION` | warn | Non-Web Mercator projection detected, not supported |
+
+### Other
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `GLOBAL_STATE_DROPPED` | drop | MapLibre global `state` dropped |
+| `VALIDATION_ERROR` | warn | Structural validation error in the output (added by the pipeline) |
+
+
 ## Limitations
 
 1. No tile data transformation. Only style JSON is transpiled, not vector tile content.
 2. No runtime mutation. The library produces static style JSON, not a live style object.
-3. No network fetching by default. The core library is fetch-free. Pass a `fetch` adapter for URL resolution that needs network.
+3. No network fetching by default. The core library is fetch-free. You fetch the style JSON yourself and pass the object directly.
 4. Font and sprite assets are not bundled. Font mapping translates names, but the actual font PBF/sprite PNG files must be hosted separately.
 5. Proprietary features are lossy. Mapbox fog, lights, imports, style composition, PBR properties. MapLibre multi-sprite, global-state, font-faces. These are dropped (with warnings) when targeting a dialect that does not support them.
 6. Esri styles with non-Web Mercator projections are not supported.
