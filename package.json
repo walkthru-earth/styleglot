@@ -23,6 +23,9 @@
     "README.md",
     "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": false,
   "scripts": {
     "build": "tsdown",
@@ -35,7 +38,7 @@
     "test:watch": "vitest",
     "test:urls": "vitest run tests/integration/public-urls.test.ts",
     "check": "tsc --noEmit && biome ci . && vitest run",
-    "ci:publish": "pnpm build && npm publish --access public --provenance",
+    "ci:publish": "pnpm build && pnpm changeset publish",
     "prepare": "lefthook install"
   },
   "packageManager": "pnpm@10.33.0",
