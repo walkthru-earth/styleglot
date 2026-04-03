@@ -34,10 +34,10 @@ describe("derefLayers", () => {
     const ctx = makeCtx();
     const result = derefLayers(style, ctx);
 
-    const child = result.layers.find((l) => l.id === "child")!;
-    expect(child.type).toBe("fill");
-    expect(child.source).toBe("composite");
-    expect(child["source-layer"]).toBe("land");
+    const child = result.layers.find((l) => l.id === "child");
+    expect(child?.type).toBe("fill");
+    expect(child?.source).toBe("composite");
+    expect(child?.["source-layer"]).toBe("land");
   });
 
   it("keeps the child layer's own paint and does not inherit paint from parent", () => {
@@ -55,8 +55,8 @@ describe("derefLayers", () => {
     const ctx = makeCtx();
     const result = derefLayers(style, ctx);
 
-    const child = result.layers.find((l) => l.id === "child")!;
-    expect(child.paint).toEqual({ "fill-color": "red" });
+    const child = result.layers.find((l) => l.id === "child");
+    expect(child?.paint).toEqual({ "fill-color": "red" });
   });
 
   it("pushes a warning and skips on circular ref chain", () => {
@@ -84,7 +84,7 @@ describe("derefLayers", () => {
     const ctx = makeCtx();
     const result = derefLayers(style, ctx);
 
-    const orphan = result.layers.find((l) => l.id === "orphan")!;
+    const orphan = result.layers.find((l) => l.id === "orphan");
     // Should not crash. Type remains undefined since target was not found.
     expect(orphan).toBeDefined();
     expect(ctx.warnings.length).toBe(0);

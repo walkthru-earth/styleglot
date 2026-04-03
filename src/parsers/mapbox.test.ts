@@ -71,9 +71,9 @@ describe("parseMapbox", () => {
     const ir = parseMapbox(input, ctx);
 
     expect(ir._extensions?.mapbox).toBeDefined();
-    expect(ir._extensions!.mapbox!.fog).toEqual({ range: [0.5, 10] });
-    expect(ir._extensions!.mapbox!.lights).toEqual([{ type: "ambient" }]);
-    expect(ir._extensions!.mapbox!.imports).toEqual([
+    expect(ir._extensions?.mapbox?.fog).toEqual({ range: [0.5, 10] });
+    expect(ir._extensions?.mapbox?.lights).toEqual([{ type: "ambient" }]);
+    expect(ir._extensions?.mapbox?.imports).toEqual([
       { id: "base", url: "mapbox://styles/mapbox/standard" },
     ]);
   });

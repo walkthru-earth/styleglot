@@ -76,11 +76,11 @@ describe("emitEsri", () => {
     const ctx = makeCtx({ baseUrl: BASE_URL });
     const output = emitEsri(makeIR(), ctx);
 
-    const bgLayer = output.layers.find((l) => l.id === "bg")!;
-    const fillLayer = output.layers.find((l) => l.id === "fill")!;
+    const bgLayer = output.layers.find((l) => l.id === "bg");
+    const fillLayer = output.layers.find((l) => l.id === "fill");
 
-    expect(bgLayer.source).toBeUndefined();
-    expect(fillLayer.source).toBe("esri");
+    expect(bgLayer?.source).toBeUndefined();
+    expect(fillLayer?.source).toBe("esri");
   });
 
   it("keeps absolute URLs and emits warnings when no baseUrl is provided", () => {

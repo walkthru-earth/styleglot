@@ -122,7 +122,7 @@ describe("stripLossy", () => {
     const result = stripLossy(style, ctx);
 
     expect(result._extensions?.mapbox).toBeDefined();
-    expect(result._extensions!.mapbox!.name).toBe("Stash Test");
-    expect(result._extensions!.mapbox!.metadata).toEqual({ key: "value" });
+    expect(result._extensions?.mapbox?.name).toBe("Stash Test");
+    expect(result._extensions?.mapbox?.metadata).toEqual({ key: "value" });
   });
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { IRSource } from "./types/index.ts";
 import {
   createWarning,
   deepClone,
@@ -86,27 +87,27 @@ describe("isLegacyStops", () => {
 
 describe("source type guards", () => {
   it("isVectorSource returns true for vector type", () => {
-    expect(isVectorSource({ type: "vector" } as any)).toBe(true);
+    expect(isVectorSource({ type: "vector" } as IRSource)).toBe(true);
   });
 
   it("isVectorSource returns false for raster type", () => {
-    expect(isVectorSource({ type: "raster" } as any)).toBe(false);
+    expect(isVectorSource({ type: "raster" } as IRSource)).toBe(false);
   });
 
   it("isRasterSource returns true for raster type", () => {
-    expect(isRasterSource({ type: "raster" } as any)).toBe(true);
+    expect(isRasterSource({ type: "raster" } as IRSource)).toBe(true);
   });
 
   it("isRasterDEMSource returns true for raster-dem type", () => {
-    expect(isRasterDEMSource({ type: "raster-dem" } as any)).toBe(true);
+    expect(isRasterDEMSource({ type: "raster-dem" } as IRSource)).toBe(true);
   });
 
   it("isGeoJSONSource returns true for geojson type", () => {
-    expect(isGeoJSONSource({ type: "geojson" } as any)).toBe(true);
+    expect(isGeoJSONSource({ type: "geojson" } as IRSource)).toBe(true);
   });
 
   it("isGeoJSONSource returns false for vector type", () => {
-    expect(isGeoJSONSource({ type: "vector" } as any)).toBe(false);
+    expect(isGeoJSONSource({ type: "vector" } as IRSource)).toBe(false);
   });
 });
 
