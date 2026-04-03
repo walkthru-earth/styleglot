@@ -26,8 +26,8 @@ describe("Esri -> MapLibre", () => {
     expect(esriSource).toBeDefined();
     // Should have tiles array with absolute URL containing z/y/x
     expect(esriSource.tiles).toBeDefined();
-    expect(esriSource.tiles!.length).toBeGreaterThan(0);
-    const tileUrl = esriSource.tiles![0];
+    expect(esriSource.tiles?.length).toBeGreaterThan(0);
+    const tileUrl = esriSource.tiles?.[0];
     expect(tileUrl).toMatch(/^https?:\/\//);
     expect(tileUrl).toContain("{z}/{y}/{x}");
   });
@@ -40,9 +40,9 @@ describe("Esri -> MapLibre", () => {
 
   it("resolves glyphs to an absolute URL with preserved template tokens", () => {
     expect(typeof output.glyphs).toBe("string");
-    expect(output.glyphs!).toMatch(/^https?:\/\//);
-    expect(output.glyphs!).toContain("{fontstack}");
-    expect(output.glyphs!).toContain("{range}");
+    expect(output.glyphs).toMatch(/^https?:\/\//);
+    expect(output.glyphs).toContain("{fontstack}");
+    expect(output.glyphs).toContain("{range}");
   });
 
   it("preserves all layers", () => {

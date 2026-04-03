@@ -41,10 +41,10 @@ describe.skipIf(!NETWORK_AVAILABLE)("Esri Living Atlas basemaps", () => {
     const sources = result.output.sources as Record<string, { tiles?: string[] }>;
     const firstSource = Object.values(sources)[0];
     expect(firstSource.tiles).toBeDefined();
-    expect(firstSource.tiles![0]).toMatch(/^https?:\/\//);
+    expect(firstSource.tiles?.[0]).toMatch(/^https?:\/\//);
 
     // No error-severity warnings (info and warn are fine)
-    const errors = result.warnings.filter((w) => w.severity === "drop");
+    const _errors = result.warnings.filter((w) => w.severity === "drop");
     // "drop" severity means something was dropped, but should not prevent success
     // Just ensure no throw occurred (we got here)
     expect(result.output).toBeDefined();
