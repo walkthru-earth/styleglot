@@ -72,7 +72,7 @@ For each layer with a "ref" property:
 
 **Esri -> IR:** Convert `url: "../../"` to `tiles: ["{base}/tile/{z}/{y}/{x}.pbf"]`
 **Mapbox -> IR:** Expand `mapbox://` URLs to HTTPS
-**IR -> Esri:** Convert back to relative `url: "../../"`
+**IR -> Esri:** Emit absolute `url: "{base}/tile/{z}/{y}/{x}.pbf"` (no relative paths)
 **IR -> MapLibre:** Keep `tiles` array (preferred) or `url` (both valid)
 
 ### 3. rewriteSprites

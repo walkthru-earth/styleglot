@@ -148,9 +148,9 @@ Each transform is a separate file in `src/transforms/`. All are pure functions.
 ## Phase 4: Emitters
 
 ### 4a. Esri emitter
-- Re-relativize sprite, glyph, source URLs (requires `baseUrl`)
+- Resolve sprite, glyph, source URLs to absolute using `baseUrl`
 - Strip all top-level properties except version, sprite, glyphs, sources, layers
-- Convert `source.tiles` back to `source.url = "../../"`
+- Emit absolute tile URL `{baseUrl}/tile/{z}/{y}/{x}.pbf` for Esri VTS sources
 
 ### 4b. Mapbox emitter
 - Restore Mapbox-specific extensions from `_extensions.mapbox`

@@ -13,9 +13,9 @@
 | `pitch` | Never present | Optional | Optional | |
 | `roll` | Never | Never | Optional | MapLibre-only (v5+, 6DOF camera) |
 | `centerAltitude` | Never | Never | Optional | MapLibre-only (v5+) |
-| `sprite` | Relative (`../sprites/sprite`) | `mapbox://sprites/...` or HTTPS | HTTPS URL or `[{id, url}]` array | Three completely different patterns |
-| `glyphs` | Relative (`../fonts/{fontstack}/{range}.pbf`) | `mapbox://fonts/...` | HTTPS `.../{fontstack}/{range}.pbf` | Three completely different patterns |
-| `sources` | Single source named `"esri"` with relative `url` | `mapbox://` protocol or HTTPS | HTTPS URLs | |
+| `sprite` | Native: relative (`../sprites/sprite`), emitter: absolute HTTPS | `mapbox://sprites/...` or HTTPS | HTTPS URL or `[{id, url}]` array | Three completely different patterns |
+| `glyphs` | Native: relative (`../fonts/...`), emitter: absolute HTTPS | `mapbox://fonts/...` | HTTPS `.../{fontstack}/{range}.pbf` | Three completely different patterns |
+| `sources` | Native: relative `url`, emitter: absolute tile URL | `mapbox://` protocol or HTTPS | HTTPS URLs | |
 | `layers` | Array | Array | Array | Core structure identical |
 | `light` | Never present | Optional | Optional | Single light object |
 | `lights` | Never | PBR ambient + directional array | Never | Mapbox-only (replaces `light`) |
@@ -46,9 +46,10 @@
 }
 ```
 - Always a single source named `"esri"`
-- `url` is always relative `"../../"` (from `resources/styles/` to VectorTileServer root)
-- No `tiles`, `minzoom`, `maxzoom`, `attribution`, `bounds` in the style itself
-- Tile URL is always `{base}/tile/{z}/{y}/{x}.pbf` (Esri uses **{z}/{y}/{x}** order)
+- Native root.json uses relative `url: "../../"` (from `resources/styles/` to VectorTileServer root)
+- The Styleglot emitter resolves this to an absolute URL: `{base}/tile/{z}/{y}/{x}.pbf`
+- No `tiles`, `minzoom`, `maxzoom`, `attribution`, `bounds` in the native style itself
+- Tile URL uses **{z}/{y}/{x}** order (Esri convention, row before column)
 - The VectorTileServer REST endpoint (`?f=json`) contains the TileJSON-like metadata
 
 ### Mapbox pattern

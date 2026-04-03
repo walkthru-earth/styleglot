@@ -108,14 +108,13 @@ Accepts the same options as `transpile()` plus:
 
 ### `resolveEsriStyleUrls(style, baseUrl)`
 
-Resolves relative URLs in Esri style output to absolute URLs. Useful when consuming the style directly without a VectorTileServer endpoint.
+Resolves relative `../` URLs in an Esri style to absolute URLs. This is only needed for styles loaded from external sources that still contain relative paths. When you use `transpile()` or `transpileAsync()` with a `baseUrl`, the output already contains absolute URLs and this function is a no-op.
 
 ```typescript
-import { transpile, resolveEsriStyleUrls } from "@walkthru-earth/styleglot";
+import { resolveEsriStyleUrls } from "@walkthru-earth/styleglot";
 
-const { output } = transpile(esriStyle, { toDialect: "esri", baseUrl });
-const resolved = resolveEsriStyleUrls(output, baseUrl);
-// resolved.sprite, .glyphs, .sources now have absolute URLs
+// For externally-loaded Esri root.json files with relative paths:
+const resolved = resolveEsriStyleUrls(externalEsriStyle, baseUrl);
 ```
 
 ### `detect(input)`

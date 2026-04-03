@@ -207,7 +207,7 @@ This metadata is NOT in the root.json style itself. If needed (e.g., for bounds,
 
 | Esri feature | Conversion needed? | Target compatibility |
 |-------------|-------------------|---------------------|
-| Relative URLs (`../`, `../../`) | Yes, resolve to absolute | Required for MapLibre/Mapbox |
+| Relative URLs (`../`, `../../`) | Resolved to absolute by parser and emitter | Required for MapLibre/Mapbox, also used in Esri emitter output |
 | `_symbol` filters | No | Valid in all dialects |
 | Slash layer IDs | No | Valid in all modern renderers |
 | Legacy stops | No (optional modernization) | Supported by all dialects |

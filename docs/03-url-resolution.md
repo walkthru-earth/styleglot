@@ -18,7 +18,7 @@ graph TD
     E --> F
     
     F --> G{Target Dialect}
-    G -->|Esri| H[Re-relativize URLs<br/>to ../ patterns]
+    G -->|Esri| H[Emit absolute URLs<br/>resolved against baseUrl]
     G -->|Mapbox| I[Convert to mapbox://<br/>protocol if possible]
     G -->|MapLibre| J[Keep absolute HTTPS]
 ```
@@ -60,16 +60,18 @@ Input:  source.url = "mapbox://mapbox.mapbox-streets-v8,mapbox.mapbox-terrain-v2
 Output: source.url = "https://api.mapbox.com/v4/mapbox.mapbox-streets-v8,mapbox.mapbox-terrain-v2.json?secure&access_token=..."
 ```
 
-### IR -> Esri (re-relativize)
+### IR -> Esri (absolute)
 
-When emitting Esri format, convert absolute source URLs back to relative:
+When emitting Esri format, the emitter produces absolute URLs (not relative `../../` paths). This makes the output self-contained and directly consumable without post-processing.
+
 ```
 Input:  source.tiles = ["https://...VectorTileServer/tile/{z}/{y}/{x}.pbf"]
-Output: source.url = "../../"
-        (source.tiles deleted)
+        baseUrl = "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer"
+
+Output: source.url = "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf"
 ```
 
-This requires the `baseUrl` to be provided in emit options.
+This requires the `baseUrl` to be provided in emit options. Non-Esri sources (TileJSON URLs, resolved tile arrays) pass through as-is.
 
 ## Sprite URL resolution
 
