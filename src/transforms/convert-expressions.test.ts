@@ -136,6 +136,76 @@ describe("convertExpressions", () => {
     expect(ctx.warnings.some((w) => w.message.includes("global-state"))).toBe(true);
   });
 
+  it("removes Mapbox-only 'random' expression when targeting MapLibre", () => {
+    const style = makeStyle([
+      {
+        id: "test",
+        type: "symbol",
+        source: "src",
+        layout: {
+          "icon-rotate": ["random", 0, 360, ["id"]],
+        },
+      },
+    ]);
+
+    const ctx = makeCtx({ targetDialect: "maplibre" });
+    const result = convertExpressions(style, ctx);
+
+    const layout = result.layers[0].layout as Record<string, unknown>;
+    expect(layout["icon-rotate"]).toBeNull();
+    expect(ctx.warnings.some((w) => w.message.includes("random"))).toBe(true);
+  });
+
+  it("removes MapLibre-only 'split' expression when targeting Mapbox", () => {
+    const style = makeStyle([
+      {
+        id: "test",
+        type: "symbol",
+        source: "src",
+        layout: {
+          "text-field": ["split", ["get", "name"], ","],
+        },
+      },
+    ]);
+
+    const ctx = makeCtx({
+      sourceDialect: "maplibre",
+      targetDialect: "mapbox",
+      options: { toDialect: "mapbox" },
+    });
+    const result = convertExpressions(style, ctx);
+
+    const layout = result.layers[0].layout as Record<string, unknown>;
+    expect(layout["text-field"]).toBeNull();
+    expect(ctx.warnings.some((w) => w.message.includes("split"))).toBe(true);
+  });
+
+  it("removes Esri-unsupported 'within' expression when targeting Esri", () => {
+    const style = makeStyle([
+      {
+        id: "test",
+        type: "fill",
+        source: "src",
+        paint: {
+          "fill-opacity": ["case", ["within", { type: "Polygon", coordinates: [] }], 1, 0.5],
+        },
+      },
+    ]);
+
+    const ctx = makeCtx({
+      sourceDialect: "maplibre",
+      targetDialect: "esri",
+      options: { toDialect: "esri" },
+    });
+    const result = convertExpressions(style, ctx);
+
+    const paint = result.layers[0].paint as Record<string, unknown>;
+    const expr = paint["fill-opacity"] as unknown[];
+    // The nested 'within' should be replaced with null
+    expect(expr[1]).toBeNull();
+    expect(ctx.warnings.some((w) => w.message.includes("within"))).toBe(true);
+  });
+
   it("keeps legacy stops as-is when modernizeExpressions is false (default)", () => {
     const legacyStops = {
       stops: [

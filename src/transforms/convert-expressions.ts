@@ -5,10 +5,28 @@ import { WARNING_CODES } from "../types/warnings.ts";
 import { createWarning, deepClone, isExpression, isLegacyStops } from "../utils.ts";
 
 /** Mapbox-only expression operators. */
-const MAPBOX_ONLY_OPERATORS = new Set(["config", "measure-light", "worldview", "is-active-floor"]);
+const MAPBOX_ONLY_OPERATORS = new Set([
+  "config",
+  "measure-light",
+  "worldview",
+  "is-active-floor",
+  "random",
+  "hsl",
+  "hsla",
+  "distance-from-center",
+]);
 
 /** MapLibre-only expression operators. */
-const MAPLIBRE_ONLY_OPERATORS = new Set(["global-state", "elevation"]);
+const MAPLIBRE_ONLY_OPERATORS = new Set(["global-state", "elevation", "split", "join"]);
+
+/** Operators unsupported by Esri (supported by both Mapbox and MapLibre). */
+const ESRI_UNSUPPORTED_OPERATORS = new Set([
+  "within",
+  "distance",
+  "accumulated",
+  "line-progress",
+  "is-supported-script",
+]);
 
 /**
  * Convert or strip dialect-specific expressions and optionally modernize
@@ -119,6 +137,9 @@ function shouldStripOperator(op: string, ctx: TransformContext): boolean {
     return true;
   }
   if (ctx.targetDialect !== "maplibre" && MAPLIBRE_ONLY_OPERATORS.has(op)) {
+    return true;
+  }
+  if (ctx.targetDialect === "esri" && ESRI_UNSUPPORTED_OPERATORS.has(op)) {
     return true;
   }
   return false;
