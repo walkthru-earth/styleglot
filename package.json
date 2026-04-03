@@ -1,6 +1,6 @@
 {
   "name": "@walkthru-earth/styleglot",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Zero-dependency TypeScript library for transpiling between Esri, Mapbox, and MapLibre map style dialects",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -1,5 +1,15 @@
 # @walkthru-earth/styleglot
 
+## 0.2.0
+
+### Minor Changes
+
+- Preserve GeoJSON sources and respect input sprite/glyphs in Esri emitter
+
+  - Pass through GeoJSON sources in Esri output instead of silently dropping them
+  - Make `sprite` and `glyphs` optional in `EsriStyleOutput`, only include them when present in the input style or when targeting an Esri VTS with a baseUrl
+  - Stop hardcoding fallback sprite/glyphs paths for non-Esri source styles
+
 ## 0.1.2
 
 ### Patch Changes
