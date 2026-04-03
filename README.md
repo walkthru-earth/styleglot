@@ -328,6 +328,18 @@ These properties exist in one dialect but not another. They are stashed in `_ext
 See `docs/06-edge-cases-and-limitations.md` for the full list.
 
 
+## Trademarks and third-party notices
+
+This library transpiles between style specifications documented by:
+- [MapLibre](https://maplibre.org/) (maplibre-style-spec, ISC license)
+- [Mapbox](https://www.mapbox.com/) (Mapbox Style Specification)
+- [Esri](https://www.esri.com/) (ArcGIS Vector Tile Style)
+
+This project is not affiliated with, endorsed by, or sponsored by Mapbox, Esri, or the MapLibre Organization. All trademarks and registered trademarks are the property of their respective owners.
+
+Users are responsible for complying with the terms of service of whatever tile providers they access, including Esri attribution requirements, Mapbox account terms, and any applicable data licensing. This library is a format converter and does not grant rights to use any third-party services, tiles, fonts, or sprites.
+
+
 ## License
 
 CC-BY-4.0. See LICENSE file.
