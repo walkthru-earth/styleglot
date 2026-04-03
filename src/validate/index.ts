@@ -18,22 +18,22 @@ export function validate(style: unknown): ValidationResult {
 
   const s = style as Record<string, unknown>;
 
-  if (s["version"] !== 8) {
+  if (s.version !== 8) {
     errors.push('Style "version" must be 8');
   }
 
   const sources =
-    s["sources"] !== null &&
-    s["sources"] !== undefined &&
-    typeof s["sources"] === "object" &&
-    !Array.isArray(s["sources"])
-      ? (s["sources"] as Record<string, unknown>)
+    s.sources !== null &&
+    s.sources !== undefined &&
+    typeof s.sources === "object" &&
+    !Array.isArray(s.sources)
+      ? (s.sources as Record<string, unknown>)
       : {};
 
-  validateSources(s["sources"], errors);
-  validateLayers(s["layers"], sources, errors);
-  validateSprite(s["sprite"], errors);
-  validateGlyphs(s["glyphs"], errors);
+  validateSources(s.sources, errors);
+  validateLayers(s.layers, sources, errors);
+  validateSprite(s.sprite, errors);
+  validateGlyphs(s.glyphs, errors);
 
   return { valid: errors.length === 0, errors };
 }

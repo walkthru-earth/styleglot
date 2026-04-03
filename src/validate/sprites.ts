@@ -26,11 +26,11 @@ export function validateSprite(sprite: unknown, errors: string[]): void {
 
       const obj = entry as Record<string, unknown>;
 
-      if (typeof obj["id"] !== "string") {
+      if (typeof obj.id !== "string") {
         errors.push(`sprite[${i}] must have an "id" property that is a string`);
       }
 
-      if (typeof obj["url"] !== "string") {
+      if (typeof obj.url !== "string") {
         errors.push(`sprite[${i}] must have a "url" property that is a string`);
       }
     }

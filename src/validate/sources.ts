@@ -32,13 +32,13 @@ export function validateSources(sources: unknown, errors: string[]): void {
 
     const src = source as Record<string, unknown>;
 
-    if (typeof src["type"] !== "string") {
+    if (typeof src.type !== "string") {
       errors.push(`Source "${name}" must have a "type" property that is a string`);
       continue;
     }
 
-    if (src["type"] === "vector") {
-      if (src["url"] === undefined && src["tiles"] === undefined) {
+    if (src.type === "vector") {
+      if (src.url === undefined && src.tiles === undefined) {
         errors.push(`Vector source "${name}" must have either "url" or "tiles" (or both)`);
       }
     }

@@ -28,26 +28,26 @@ export function validateLayers(
 
     const lyr = layer as Record<string, unknown>;
 
-    if (typeof lyr["id"] !== "string") {
+    if (typeof lyr.id !== "string") {
       errors.push(`layers[${i}] must have an "id" property that is a string`);
     }
 
-    if (typeof lyr["type"] !== "string") {
+    if (typeof lyr.type !== "string") {
       errors.push(`layers[${i}] must have a "type" property that is a string`);
     }
 
-    const id = typeof lyr["id"] === "string" ? lyr["id"] : `(index ${i})`;
+    const id = typeof lyr.id === "string" ? lyr.id : `(index ${i})`;
 
-    if (typeof lyr["id"] === "string") {
-      if (seenIds.has(lyr["id"])) {
-        errors.push(`Duplicate layer id "${lyr["id"]}"`);
+    if (typeof lyr.id === "string") {
+      if (seenIds.has(lyr.id)) {
+        errors.push(`Duplicate layer id "${lyr.id}"`);
       }
-      seenIds.add(lyr["id"]);
+      seenIds.add(lyr.id);
     }
 
     // For non-background layers, validate source references
-    if (lyr["type"] !== "background" && typeof lyr["source"] === "string") {
-      const sourceName = lyr["source"];
+    if (lyr.type !== "background" && typeof lyr.source === "string") {
+      const sourceName = lyr.source;
 
       if (!(sourceName in sources)) {
         errors.push(`Layer "${id}" references source "${sourceName}" which does not exist`);
@@ -59,7 +59,7 @@ export function validateLayers(
           src !== undefined &&
           typeof src === "object" &&
           !Array.isArray(src) &&
-          (src as Record<string, unknown>)["type"] === "vector" &&
+          (src as Record<string, unknown>).type === "vector" &&
           lyr["source-layer"] === undefined
         ) {
           errors.push(
