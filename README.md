@@ -8,7 +8,7 @@ Parse any dialect into a canonical intermediate representation (IR), run transfo
 ## Install
 
 ```bash
-pnpm add styleglot
+pnpm add @walkthru-earth/styleglot
 ```
 
 Also works with npm and yarn. Requires Node 18+.
@@ -17,7 +17,7 @@ Also works with npm and yarn. Requires Node 18+.
 ## Quick start
 
 ```typescript
-import { transpile } from "styleglot";
+import { transpile } from "@walkthru-earth/styleglot";
 
 // Pass a style object directly (no fetching needed)
 const result = transpile(esriRootJson, {
@@ -86,7 +86,7 @@ transpile(input: unknown, options: TranspileOptions): TranspileResult
 Auto-detect which dialect a style JSON belongs to.
 
 ```typescript
-import { detect } from "styleglot";
+import { detect } from "@walkthru-earth/styleglot";
 
 detect(style); // "esri" | "mapbox" | "maplibre"
 ```
@@ -98,7 +98,7 @@ Uses a scoring algorithm based on dialect-specific signals (URL patterns, propri
 Structural validation of a style object.
 
 ```typescript
-import { validate } from "styleglot";
+import { validate } from "@walkthru-earth/styleglot";
 
 const { valid, errors } = validate(style);
 ```
@@ -108,7 +108,7 @@ const { valid, errors } = validate(style);
 Low-level access to individual pipeline stages. Useful for custom workflows.
 
 ```typescript
-import { parse, emit } from "styleglot";
+import { parse, emit } from "@walkthru-earth/styleglot";
 ```
 
 
@@ -135,7 +135,7 @@ transpile(style, {
 Extend the transform pipeline without forking:
 
 ```typescript
-import type { Plugin } from "styleglot";
+import type { Plugin } from "@walkthru-earth/styleglot";
 
 const myPlugin: Plugin = {
   name: "custom-source-rewrite",
