@@ -140,7 +140,7 @@ IRStyle, IRSource, IRLayer, Dialect, Plugin, TranspileOptions, ...
 
 ## Design principles
 
-1. **Zero dependencies.** No runtime deps. Build with tsup for CJS + ESM + .d.ts.
+1. **Zero dependencies.** No runtime deps. Build with tsdown for CJS + ESM + .d.ts.
 2. **Type-safe throughout.** Full TypeScript generics so `transpile<"maplibre">(...)` returns the correct output type.
 3. **Pure functions.** No mutation of input. Every step returns a new object.
 4. **Lossy-aware.** Every dropped feature produces a warning. Strict mode throws.

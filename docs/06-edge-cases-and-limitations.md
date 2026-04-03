@@ -161,7 +161,7 @@ The `imports` system composes multiple styles into one. The imported styles are 
 - Cannot resolve imports without network access
 - Drop `imports` from the output
 - Warning: `"Mapbox style imports cannot be resolved without fetching. The imported layers will be missing from the output."`
-- Warning code: `MAPBOX_IMPORTS_DROPPED`
+- Warning code: `LOSSY_IMPORTS`
 - If `fetch` adapter is provided in options, optionally resolve imports inline
 
 ### Mapbox `slot` layers
@@ -215,7 +215,7 @@ MapLibre v5+ supports direct font file URLs instead of pre-rendered SDF glyphs:
 - Drop `font-faces`
 - If `glyphs` URL exists: keep it (fonts will load from glyph endpoint)
 - If no `glyphs` URL: warn that text rendering may fail
-- Warning code: `FONT_FACES_DROPPED`
+- Warning code: `LOSSY_FONT_FACES`
 
 ### `state` and `global-state` expressions
 

@@ -22,8 +22,12 @@ graph TD
         T10 --> IR2[Transformed IRStyle]
     end
     
+    subgraph "Validate Phase"
+        IR2 --> V[validate]
+    end
+
     subgraph "Emit Phase"
-        IR2 --> E[emit]
+        V --> E[emit]
         E --> OUT[Output Style JSON]
     end
 ```
@@ -153,16 +157,27 @@ If no fontMapping:
 
 This conversion is **optional** because MapLibre still supports legacy stops. Enable via `options.modernizeExpressions: true`.
 
-**Mapbox-only expressions -> warnings:**
-- `config` -> warning + remove (no equivalent)
-- `measure-light` -> warning + remove
-- `worldview` -> warning + remove
-- `is-active-floor` -> warning + remove
-- `pitch` -> warning (MapLibre uses `["pitch"]` too, but check version)
+**Mapbox-only expressions (stripped when targeting MapLibre or Esri):**
+- `config` -> warning + remove (Mapbox Standard Style theming)
+- `measure-light` -> warning + remove (PBR lighting queries)
+- `worldview` -> warning + remove (disputed border filtering)
+- `is-active-floor` -> warning + remove (3D indoor maps)
+- `random` -> warning + remove (deterministic pseudo-random values)
+- `hsl` / `hsla` -> warning + remove (HSL color expressions, not CSS strings)
+- `distance-from-center` -> warning + remove (camera-dependent styling)
 
-**MapLibre-only expressions -> warnings (when targeting Mapbox):**
-- `global-state` -> warning + remove
-- `elevation` -> warning + remove
+**MapLibre-only expressions (stripped when targeting Mapbox or Esri):**
+- `global-state` -> warning + remove (runtime state variables)
+- `elevation` -> warning + remove (terrain elevation queries)
+- `split` -> warning + remove (string splitting)
+- `join` -> warning + remove (array joining)
+
+**Esri-unsupported expressions (stripped when targeting Esri only):**
+- `within` -> warning + remove (geospatial containment)
+- `distance` -> warning + remove (distance to geometry)
+- `accumulated` -> warning + remove (cluster aggregation)
+- `line-progress` -> warning + remove (gradient along line)
+- `is-supported-script` -> warning + remove (script detection)
 
 ### 8. normalizePMTiles
 
@@ -209,25 +224,29 @@ graph TD
 - `models` / `iconsets` / `featuresets` / `indoor`
 - Layer types: `building`, `model`, `raster-particle`, `slot`, `clip`
 - Properties: `*-emissive-strength`, `*-use-theme`, `*-occlusion-opacity`
+- Expressions: `config`, `measure-light`, `worldview`, `is-active-floor`, `random`, `hsl`, `hsla`, `distance-from-center`
 - Mapbox API fields: `owner`, `visibility`, `draft`, `created`, `modified`
 
 **Mapbox -> Esri (drop list):**
 - Everything in the MapLibre drop list, plus:
 - `terrain`, `sky`, `light` (Esri styles have no top-level rendering config)
-- `name`, `metadata`, `center`, `zoom`, `bearing`, `pitch`
-- Layer types: `raster`, `heatmap`, `hillshade`, `sky`
-- All non-`fill`/`line`/`symbol`/`circle`/`fill-extrusion` layer types
+- `name`, `metadata`, `center`, `zoom`, `bearing`, `pitch`, `transition`
+- Layer types: `raster`, `heatmap`, `hillshade`, `sky`, `color-relief`
+- All non-`fill`/`line`/`symbol`/`circle`/`fill-extrusion`/`background` layer types
+- Expressions: `within`, `distance`, `accumulated`, `line-progress`, `is-supported-script`
 
 **MapLibre -> Mapbox (drop list):**
 - `state` (global state)
 - `font-faces` (direct font files)
 - `centerAltitude`, `roll` (6DOF camera)
 - Layer type: `color-relief`
-- Expressions: `global-state`, `elevation`
+- Expressions: `global-state`, `elevation`, `split`, `join`
 - Multi-sprite array -> collapse to single
 
 **MapLibre -> Esri (drop list):**
-- Same as Mapbox -> Esri, plus MapLibre-specific features
+- Everything in Mapbox -> Esri drop list, plus:
+- `state`, `font-faces`, `centerAltitude`, `roll`
+- Expressions: `global-state`, `elevation`, `split`, `join`
 
 ### 10. userPlugins
 
