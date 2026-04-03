@@ -1,0 +1,21 @@
+{
+  "extends": "@tsconfig/svelte/tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2024",
+    "useDefineForClassFields": false,
+    "module": "ES2020",
+    "moduleResolution": "bundler",
+    "lib": ["DOM", "DOM.Iterable", "ES2024"],
+    "types": ["svelte", "vite/client"],
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": true,
+    "moduleDetection": "force"
+  },
+  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"]
+}

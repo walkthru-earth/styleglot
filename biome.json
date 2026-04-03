@@ -25,6 +25,6 @@
     }
   },
   "files": {
-    "includes": ["**", "!**/node_modules", "!**/dist", "!**/coverage", "!**/*.json"]
+    "includes": ["**", "!**/node_modules", "!**/dist", "!**/coverage", "!**/*.json", "!examples/**"]
   }
 }

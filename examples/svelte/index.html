@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <meta name="theme-color" content="#FAFAF8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+    <title>Styleglot | walkthru.earth</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/5.0/esri/themes/light/main.css" />
+
+    <script>
+      // Apply saved theme before first paint to avoid flash
+      const t = localStorage.getItem('theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'walkthru-light');
+      else if (t === 'dark') document.documentElement.setAttribute('data-theme', 'walkthru-dark');
+      else document.documentElement.setAttribute('data-theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'walkthru-dark' : 'walkthru-light');
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
