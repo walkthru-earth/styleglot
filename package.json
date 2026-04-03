@@ -1,6 +1,6 @@
 {
   "name": "@walkthru-earth/styleglot",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Zero-dependency TypeScript library for transpiling between Esri, Mapbox, and MapLibre map style dialects",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -43,14 +43,31 @@
   },
   "keywords": [
     "mapbox",
+    "mapbox-gl",
+    "mapbox-style",
     "maplibre",
+    "maplibre-gl",
     "esri",
     "arcgis",
+    "arcgis-online",
     "vector-tiles",
-    "style",
+    "vector-tile-styles",
+    "style-spec",
+    "style-converter",
+    "map-styles",
     "transpiler",
-    "gl-style"
+    "gl-style",
+    "gis",
+    "geospatial"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/walkthru-earth/styleglot.git"
+  },
+  "homepage": "https://github.com/walkthru-earth/styleglot#readme",
+  "bugs": {
+    "url": "https://github.com/walkthru-earth/styleglot/issues"
+  },
   "author": "Walkthru.Earth <hi@walkthru.earth>",
   "license": "CC-BY-4.0",
   "devDependencies": {
