@@ -1,0 +1,62 @@
+{
+  "name": "styleglot",
+  "version": "0.1.0",
+  "description": "Zero-dependency TypeScript library for transpiling between Esri, Mapbox, and MapLibre map style dialects",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "ci": "biome ci .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:urls": "vitest run tests/integration/public-urls.test.ts",
+    "check": "tsc --noEmit && biome ci . && vitest run",
+    "prepare": "lefthook install"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mapbox",
+    "maplibre",
+    "esri",
+    "arcgis",
+    "vector-tiles",
+    "style",
+    "transpiler",
+    "gl-style"
+  ],
+  "author": "Walkthru.Earth <hi@walkthru.earth>",
+  "license": "CC-BY-4.0",
+  "devDependencies": {
+    "@biomejs/biome": "2.4.10",
+    "@maplibre/maplibre-gl-style-spec": "^24.8.0",
+    "@types/node": "^25.5.0",
+    "lefthook": "2.1.4",
+    "tsup": "^8.5.0",
+    "typescript": "~5.9.3",
+    "vitest": "^3.2.1"
+  }
+}

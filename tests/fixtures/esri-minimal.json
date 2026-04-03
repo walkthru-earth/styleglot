@@ -1,0 +1,74 @@
+{
+  "version": 8,
+  "sprite": "../sprites/sprite",
+  "glyphs": "../fonts/{fontstack}/{range}.pbf",
+  "sources": {
+    "esri": {
+      "type": "vector",
+      "url": "../../"
+    }
+  },
+  "layers": [
+    {
+      "id": "Land/Not ice",
+      "type": "fill",
+      "source": "esri",
+      "source-layer": "Land",
+      "filter": ["==", "_symbol", 0],
+      "paint": {
+        "fill-color": "#f7f6f2"
+      }
+    },
+    {
+      "id": "Land/Ice",
+      "type": "fill",
+      "source": "esri",
+      "source-layer": "Land",
+      "filter": ["==", "_symbol", 1],
+      "paint": {
+        "fill-color": "#ffffff"
+      }
+    },
+    {
+      "id": "Road/Highway",
+      "type": "line",
+      "source": "esri",
+      "source-layer": "Road",
+      "minzoom": 5,
+      "maxzoom": 18,
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": { "stops": [[5, "#e8d79b"], [12, "#f5e8b8"]] },
+        "line-width": { "stops": [[5, 0.5], [12, 4]] }
+      }
+    },
+    {
+      "id": "Label/City large",
+      "type": "symbol",
+      "source": "esri",
+      "source-layer": "City",
+      "minzoom": 3,
+      "maxzoom": 10,
+      "layout": {
+        "text-font": ["Arial Bold"],
+        "text-field": "{_name}",
+        "text-size": { "stops": [[3, 10], [10, 18]] }
+      },
+      "paint": {
+        "text-color": "#333333",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.5
+      }
+    },
+    {
+      "id": "Background",
+      "type": "background",
+      "paint": {
+        "background-color": "#aad3df"
+      }
+    }
+  ]
+}
