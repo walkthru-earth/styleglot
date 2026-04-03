@@ -161,8 +161,9 @@ describe("MapLibre -> Esri", () => {
     expect(keys).toContain("layers");
   });
 
-  it("re-relativizes sprite to ../sprites/sprite", () => {
-    expect(output.sprite).toBe("../sprites/sprite");
+  it("keeps absolute sprite when source is non-Esri (TileJSON url)", () => {
+    // Non-Esri sources have no VTS directory structure, so sprite stays absolute
+    expect(output.sprite).toBe("https://tiles.openfreemap.org/sprites/liberty/sprite");
   });
 
   it("collapses multi-sprite array", () => {

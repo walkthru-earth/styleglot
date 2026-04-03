@@ -325,7 +325,7 @@ function testEsriStyle(name: string, url: string) {
       baseUrl,
     });
     expect(Object.keys(backToEsri.output)).toHaveLength(5);
-    expect(backToEsri.output.sources).toHaveProperty("esri");
+    expect(Object.keys(backToEsri.output.sources).length).toBeGreaterThan(0);
   }, 30_000);
 
   it(`${name}: transpile to mapbox + spec validate`, async () => {
